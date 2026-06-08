@@ -4,409 +4,262 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>York Pizza — Inventario</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --red: #D85A30; --red-light: #FAECE7; --red-dark: #993C1D;
-    --green: #1D9E75; --green-light: #E1F5EE; --green-dark: #085041;
-    --amber: #BA7517; --amber-light: #FAEEDA; --amber-dark: #633806;
-    --gray: #888780; --gray-light: #F1EFE8; --gray-mid: #D3D1C7;
-    --text: #2C2C2A; --text2: #5F5E5A; --text3: #888780;
-    --bg: #FAFAF8; --surface: #FFFFFF; --border: rgba(44,44,42,0.12);
-    --radius: 10px; --radius-sm: 6px;
-    --shadow: 0 1px 3px rgba(44,44,42,0.08), 0 1px 2px rgba(44,44,42,0.06);
-  }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
-  
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-  .logo { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
-  .logo em { color: var(--red); font-style: normal; }
-  .header-actions { display: flex; gap: 10px; align-items: center; }
-  .last-saved { font-size: 12px; color: var(--text3); }
-
-  main { max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; }
-
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
-  .stat-label { font-size: 12px; color: var(--text3); margin-bottom: 6px; }
-  .stat-val { font-size: 26px; font-weight: 600; line-height: 1; }
-  .stat-val.ok { color: var(--green); }
-  .stat-val.warn { color: var(--amber); }
-  .stat-val.danger { color: var(--red); }
-
-  .alert-banner { background: #FCEBEB; border: 1px solid #F09595; border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px; display: none; }
-  .alert-banner.show { display: block; }
-  .alert-title { font-size: 13px; font-weight: 600; color: #A32D2D; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-  .alert-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { font-size: 12px; padding: 3px 10px; border-radius: 999px; }
-  .chip.out { background: #F7C1C1; color: #501313; }
-  .chip.low { background: #FAC775; color: #412402; }
-
-  .toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
-  .search-wrap { position: relative; flex: 1; min-width: 180px; }
-  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events: none; }
-  .search-wrap input { width: 100%; padding: 9px 12px 9px 34px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; background: var(--surface); color: var(--text); outline: none; transition: border-color 0.15s; }
-  .search-wrap input:focus { border-color: var(--red); }
-  select { padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; background: var(--surface); color: var(--text); outline: none; cursor: pointer; }
-  .filter-btns { display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface); }
-  .fbtn { padding: 8px 14px; font-family: inherit; font-size: 13px; border: none; background: transparent; cursor: pointer; color: var(--text2); transition: all 0.12s; white-space: nowrap; }
-  .fbtn.active { background: var(--text); color: #fff; }
-  .fbtn:not(:last-child) { border-right: 1px solid var(--border); }
-
-  .btn-primary { padding: 9px 18px; background: var(--red); color: #fff; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.15s; white-space: nowrap; }
-  .btn-primary:hover { background: var(--red-dark); }
-  .btn-ghost { padding: 8px 16px; background: transparent; color: var(--text2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; cursor: pointer; transition: all 0.12s; }
-  .btn-ghost:hover { background: var(--gray-light); }
-
-  .add-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; display: none; }
-  .add-form.open { display: block; }
-  .form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-  .field { display: flex; flex-direction: column; gap: 5px; }
-  .field label { font-size: 12px; font-weight: 500; color: var(--text2); }
-  .field input, .field select { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; background: var(--bg); color: var(--text); outline: none; transition: border-color 0.15s; }
-  .field input:focus, .field select:focus { border-color: var(--red); background: var(--surface); }
-  .field-nombre { flex: 2; min-width: 160px; }
-  .field-cat { flex: 1.5; min-width: 140px; }
-  .field-num { flex: 0 0 100px; }
-  .form-actions { display: flex; gap: 8px; align-items: flex-end; }
-
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  table { width: 100%; border-collapse: collapse; }
-  thead th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; background: var(--gray-light); border-bottom: 1px solid var(--border); }
-  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: var(--gray-light); }
-  tbody td { padding: 10px 14px; vertical-align: middle; }
-
-  .cat-badge { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 999px; display: inline-block; white-space: nowrap; }
-  .status-pill { font-size: 12px; font-weight: 600; padding: 4px 11px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-  .s-ok { background: var(--green-light); color: var(--green-dark); }
-  .s-low { background: var(--amber-light); color: var(--amber-dark); }
-  .s-out { background: var(--red-light); color: var(--red-dark); }
-  .s-none { background: var(--gray-light); color: var(--text3); }
-
-  .qty-wrap { display: flex; align-items: center; gap: 6px; }
-  .qty-btn { width: 26px; height: 26px; border: 1px solid var(--border); background: var(--bg); border-radius: 4px; cursor: pointer; font-size: 16px; color: var(--text2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.1s; line-height: 1; font-family: inherit; }
-  .qty-btn:hover { background: var(--gray-mid); }
-  .qty-field { width: 64px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; font-size: 14px; font-weight: 500; text-align: center; background: var(--surface); color: var(--text); outline: none; }
-  .qty-field:focus { border-color: var(--red); }
-  .btn-del { background: transparent; border: none; cursor: pointer; color: var(--text3); padding: 5px; border-radius: 4px; transition: color 0.12s; font-size: 16px; line-height: 1; }
-  .btn-del:hover { color: var(--red); }
-
-  .empty { text-align: center; padding: 40px; color: var(--text3); font-size: 14px; }
-  .prod-name { font-weight: 500; }
-  .min-info { font-size: 11px; color: var(--text3); margin-top: 1px; }
-
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: #fff; padding: 10px 18px; border-radius: var(--radius-sm); font-size: 13px; opacity: 0; transform: translateY(8px); transition: all 0.25s; pointer-events: none; z-index: 999; }
-  .toast.show { opacity: 1; transform: translateY(0); }
-
-  @media (max-width: 600px) {
-    .stats { grid-template-columns: repeat(2, 1fr); }
-    thead th:nth-child(3), tbody td:nth-child(3) { display: none; }
-    .toolbar { gap: 8px; }
-    .filter-btns { display: none; }
-    main { padding: 14px 12px 60px; }
-    header { padding: 12px 14px; }
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#D85A30;--red-d:#993C1D;--red-l:#FAECE7;
+  --green:#1D9E75;--green-l:#E1F5EE;--green-d:#085041;
+  --amber:#BA7517;--amber-l:#FAEEDA;--amber-d:#633806;
+  --danger:#E24B4A;--danger-l:#FCEBEB;--danger-d:#A32D2D;
+  --text:#2C2C2A;--text2:#5F5E5A;--text3:#888780;
+  --bg:#FAFAF8;--surface:#FFFFFF;--border:rgba(44,44,42,0.12);
+  --gray-l:#F1EFE8;--radius:10px;--radius-sm:6px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:10px}
+.logo{font-size:18px;font-weight:600;letter-spacing:-0.3px;white-space:nowrap}
+.logo em{color:var(--red);font-style:normal}
+.sync-info{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3)}
+.dot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;transition:background .3s}
+.dot.ok{background:var(--green)}.dot.syncing{background:var(--amber);animation:pulse 1s infinite}.dot.error{background:var(--danger)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+main{max-width:900px;margin:0 auto;padding:20px 16px 80px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.stat-label{font-size:12px;color:var(--text3);margin-bottom:6px}
+.stat-val{font-size:24px;font-weight:600;line-height:1}
+.stat-val.ok{color:var(--green)}.stat-val.warn{color:var(--amber)}.stat-val.danger{color:var(--danger)}
+.alert{background:var(--danger-l);border:1px solid #F09595;border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;display:none}
+.alert.show{display:block}
+.alert-title{font-size:13px;font-weight:600;color:var(--danger-d);margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:3px 10px;border-radius:999px}
+.chip.out{background:#F7C1C1;color:#501313}.chip.low{background:#FAC775;color:#412402}
+.toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.search-wrap{position:relative;flex:1;min-width:160px}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
+.search-wrap input{width:100%;padding:9px 12px 9px 34px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;background:var(--surface);color:var(--text);outline:none}
+.search-wrap input:focus{border-color:var(--red)}
+select{padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;background:var(--surface);color:var(--text);outline:none;cursor:pointer}
+.fbtns{display:flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface)}
+.fbtn{padding:8px 12px;font-family:inherit;font-size:13px;border:none;background:transparent;cursor:pointer;color:var(--text2);white-space:nowrap}
+.fbtn.active{background:var(--text);color:#fff}
+.fbtn:not(:last-child){border-right:1px solid var(--border)}
+.btn-primary{padding:9px 16px;background:var(--red);color:#fff;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-primary:active{background:var(--red-d)}
+.btn-ghost{padding:8px 14px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;cursor:pointer}
+.add-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;display:none}
+.add-form.open{display:block}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;font-weight:500;color:var(--text2)}
+.field input,.field select{padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;background:var(--bg);color:var(--text);outline:none}
+.field input:focus,.field select:focus{border-color:var(--red);background:var(--surface)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;background:var(--gray-l);border-bottom:1px solid var(--border)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--gray-l)}
+tbody td{padding:9px 14px;vertical-align:middle}
+.cat-badge{font-size:11px;font-weight:500;padding:3px 9px;border-radius:999px;display:inline-block;white-space:nowrap}
+.spill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.s-ok{background:var(--green-l);color:var(--green-d)}.s-low{background:var(--amber-l);color:var(--amber-d)}.s-out{background:var(--danger-l);color:var(--danger-d)}
+.qwrap{display:flex;align-items:center;gap:6px}
+.qbtn{width:28px;height:28px;border:1px solid var(--border);background:var(--bg);border-radius:4px;cursor:pointer;font-size:18px;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.qbtn:active{background:#ddd}
+.qfield{width:62px;padding:5px 6px;border:1px solid var(--border);border-radius:4px;font-family:inherit;font-size:14px;font-weight:500;text-align:center;background:var(--surface);color:var(--text);outline:none}
+.qfield:focus{border-color:var(--red)}
+.del-btn{background:transparent;border:none;cursor:pointer;color:var(--text3);padding:6px;border-radius:4px;font-size:18px;line-height:1;-webkit-tap-highlight-color:transparent}
+.del-btn:active{color:var(--danger)}
+.pname{font-weight:500;font-size:14px}.pmeta{font-size:11px;color:var(--text3);margin-top:1px}
+.empty{text-align:center;padding:40px;color:var(--text3);font-size:14px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--text);color:#fff;padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;opacity:0;transition:all .25s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:600px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  thead th:nth-child(3),tbody td:nth-child(3){display:none}
+  .fbtns{display:none}
+  main{padding:14px 12px 80px}
+}
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo"><em>YORK</em> PIZZA — Inventario</div>
-  <div class="header-actions">
-    <span class="last-saved" id="lastSaved"></span>
-    <button class="btn-primary" onclick="toggleForm()">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Agregar producto
-    </button>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div class="sync-info"><span class="dot" id="syncDot"></span><span id="syncLbl">Conectando...</span></div>
+    <button class="btn-primary" onclick="toggleForm()">+ Agregar</button>
   </div>
 </header>
-
 <main>
-  <div class="stats" id="statsGrid"></div>
-
-  <div class="alert-banner" id="alertBanner">
-    <div class="alert-title">
-      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      Necesitas reponer estos productos:
-    </div>
-    <div class="alert-chips" id="alertChips"></div>
+  <div class="stats" id="stats"></div>
+  <div class="alert" id="alertBox">
+    <div class="alert-title">⚠ Necesitas reponer:</div>
+    <div class="chips" id="alertChips"></div>
   </div>
-
   <div class="add-form" id="addForm">
     <div class="form-row">
-      <div class="field field-nombre"><label>Nombre del producto</label><input type="text" id="nNombre" placeholder="Ej: Queso Mozzarella (lb)"></div>
-      <div class="field field-cat"><label>Categoría</label>
-        <select id="nCat">
-          <option>Empaque</option><option>Desechable</option><option>Bebida</option>
-          <option>Ingrediente Base</option><option>Proteína</option><option>Vegetal</option>
-          <option>Condimento</option><option>Suministro</option><option>Otro</option>
-        </select>
+      <div class="field" style="flex:2;min-width:150px"><label>Nombre del producto</label><input type="text" id="nN" placeholder="Ej: Queso Mozzarella (lb)"></div>
+      <div class="field" style="flex:1.5;min-width:130px"><label>Categoría</label>
+        <select id="nC"><option>Empaque</option><option>Desechable</option><option>Bebida</option>
+        <option>Ingrediente Base</option><option>Proteína</option><option>Vegetal</option>
+        <option>Condimento</option><option>Suministro</option><option>Otro</option></select>
       </div>
-      <div class="field field-num"><label>Cantidad inicial</label><input type="number" id="nQty" min="0" step="0.5" placeholder="0"></div>
-      <div class="field field-num"><label>Mínimo aceptable</label><input type="number" id="nMin" min="0" step="0.5" placeholder="5"></div>
-      <div class="form-actions">
+      <div class="field" style="width:95px"><label>Cantidad</label><input type="number" id="nQ" min="0" step="0.5" placeholder="0"></div>
+      <div class="field" style="width:95px"><label>Mínimo</label><input type="number" id="nM" min="0" step="0.5" placeholder="5"></div>
+      <div style="display:flex;gap:8px;align-items:flex-end">
         <button class="btn-primary" onclick="addItem()">Guardar</button>
         <button class="btn-ghost" onclick="toggleForm()">Cancelar</button>
       </div>
     </div>
   </div>
-
   <div class="toolbar">
     <div class="search-wrap">
       <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" id="search" placeholder="Buscar producto..." oninput="render()">
     </div>
-    <select id="catFilter" onchange="render()">
-      <option value="">Todas las categorías</option>
-    </select>
-    <div class="filter-btns">
-      <button class="fbtn active" data-f="all" onclick="setFilter(this)">Todos</button>
-      <button class="fbtn" data-f="ok" onclick="setFilter(this)">En stock</button>
-      <button class="fbtn" data-f="low" onclick="setFilter(this)">Poco</button>
-      <button class="fbtn" data-f="out" onclick="setFilter(this)">Sin stock</button>
+    <select id="catF" onchange="render()"><option value="">Todas las categorías</option></select>
+    <div class="fbtns">
+      <button class="fbtn active" data-f="all" onclick="setF(this)">Todos</button>
+      <button class="fbtn" data-f="ok" onclick="setF(this)">En stock</button>
+      <button class="fbtn" data-f="low" onclick="setF(this)">Poco</button>
+      <button class="fbtn" data-f="out" onclick="setF(this)">Sin stock</button>
     </div>
   </div>
-
   <div class="card">
     <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Producto</th>
-          <th>Categoría</th>
-          <th>Cantidad</th>
-          <th>Estado</th>
-          <th></th>
-        </tr>
-      </thead>
+      <thead><tr><th>#</th><th>Producto</th><th>Categoría</th><th>Cantidad</th><th>Estado</th><th></th></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
   </div>
 </main>
-
 <div class="toast" id="toast"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-<script>
-const DEFAULT_ITEMS = [
-  {id:1,nombre:'Cajas Grandes',cat:'Empaque',qty:113,min:20},
-  {id:2,nombre:'Cajas Pequeñas',cat:'Empaque',qty:24,min:10},
-  {id:3,nombre:'Fundas Pizza',cat:'Empaque',qty:4,min:10},
-  {id:4,nombre:'Fundas de Rayas',cat:'Empaque',qty:2,min:5},
-  {id:5,nombre:'Fundas Basura',cat:'Empaque',qty:1,min:5},
-  {id:6,nombre:'Porta Pizza',cat:'Empaque',qty:80,min:20},
-  {id:7,nombre:'Platos #9',cat:'Desechable',qty:61,min:15},
-  {id:8,nombre:'Platos #8',cat:'Desechable',qty:0,min:15},
-  {id:9,nombre:'Tenedores',cat:'Desechable',qty:15,min:10},
-  {id:10,nombre:'Servilletas',cat:'Desechable',qty:3,min:5},
-  {id:11,nombre:'Caja de Guantes',cat:'Desechable',qty:1,min:2},
-  {id:12,nombre:'Vasos',cat:'Desechable',qty:0,min:10},
-  {id:13,nombre:'Coca Cola 1.25L',cat:'Bebida',qty:12,min:6},
-  {id:14,nombre:'Coca Cola 13oz',cat:'Bebida',qty:10,min:6},
-  {id:15,nombre:'Jugos Naturales',cat:'Bebida',qty:17,min:6},
-  {id:16,nombre:'Masa Grande',cat:'Ingrediente Base',qty:9,min:5},
-  {id:17,nombre:'Masa Personal',cat:'Ingrediente Base',qty:0,min:5},
-  {id:18,nombre:'Queso Mozzarella (lb)',cat:'Ingrediente Base',qty:7,min:5},
-  {id:19,nombre:'Salsa de Pizza',cat:'Ingrediente Base',qty:2,min:3},
-  {id:20,nombre:'Salsa BBQ',cat:'Ingrediente Base',qty:0,min:3},
-  {id:21,nombre:'Peperoni (lb)',cat:'Proteína',qty:2,min:3},
-  {id:22,nombre:'Jamón (lb)',cat:'Proteína',qty:1,min:3},
-  {id:23,nombre:'Tocino (lb)',cat:'Proteína',qty:1,min:3},
-  {id:24,nombre:'Salchicha Italiana (lb)',cat:'Proteína',qty:1,min:3},
-  {id:25,nombre:'Pollo (lb)',cat:'Proteína',qty:0,min:3},
-  {id:26,nombre:'Chorizo Español',cat:'Proteína',qty:2.5,min:2},
-  {id:27,nombre:'Maíz (lata)',cat:'Vegetal',qty:2,min:2},
-  {id:28,nombre:'Pimentón Verde',cat:'Vegetal',qty:0,min:2},
-  {id:29,nombre:'Pimentón Rojo',cat:'Vegetal',qty:0,min:2},
-  {id:30,nombre:'Cebolla (lb)',cat:'Vegetal',qty:5,min:3},
-  {id:31,nombre:'Aceitunas Negras (lata)',cat:'Vegetal',qty:0,min:2},
-  {id:32,nombre:'Vegetales Mix (lb)',cat:'Vegetal',qty:4,min:3},
-  {id:33,nombre:'Ajo (lb)',cat:'Condimento',qty:1,min:2},
-  {id:34,nombre:'Orégano (paquete)',cat:'Condimento',qty:1,min:2},
-  {id:35,nombre:'Azúcar (lb)',cat:'Condimento',qty:0.5,min:1},
-  {id:36,nombre:'Lasaña',cat:'Otro',qty:0,min:2},
-  {id:37,nombre:'Gas (tanque)',cat:'Suministro',qty:0,min:1},
-];
-
-const CAT_STYLE = {
-  'Empaque':         {bg:'#dbeafe',text:'#1e3a5f'},
-  'Desechable':      {bg:'#dcfce7',text:'#14532d'},
-  'Bebida':          {bg:'#ccfbf1',text:'#064e3b'},
-  'Ingrediente Base':{bg:'#fce7f3',text:'#701a75'},
-  'Proteína':        {bg:'#fef3c7',text:'#78350f'},
-  'Vegetal':         {bg:'#ede9fe',text:'#3b0764'},
-  'Condimento':      {bg:'#ffedd5',text:'#7c2d12'},
-  'Suministro':      {bg:'#f1f5f9',text:'#1e293b'},
-  'Otro':            {bg:'#f1f5f9',text:'#1e293b'},
+const firebaseConfig = {
+  apiKey: "AIzaSyAbvHuaJsyd03ztIQoMhilXpLDpaAJtH9s",
+  authDomain: "york-pizza-82d22.firebaseapp.com",
+  databaseURL: "https://york-pizza-82d22-default-rtdb.firebaseio.com",
+  projectId: "york-pizza-82d22",
 };
 
-const STORAGE_KEY = 'yorkpizza_items';
-const NEXTID_KEY  = 'yorkpizza_nextid';
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const dbRef = ref(db, 'inventario');
 
-function load() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_ITEMS));
-  } catch(e) { return JSON.parse(JSON.stringify(DEFAULT_ITEMS)); }
-}
-function save(items) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  const now = new Date();
-  document.getElementById('lastSaved').textContent =
-    'Guardado ' + now.toLocaleTimeString('es-DO', {hour:'2-digit', minute:'2-digit'});
-}
-function getNextId() {
-  const v = parseInt(localStorage.getItem(NEXTID_KEY)||'38');
-  localStorage.setItem(NEXTID_KEY, v+1);
-  return v;
-}
+const CAT_STYLE={
+  'Empaque':{bg:'#dbeafe',tc:'#1e3a5f'},'Desechable':{bg:'#dcfce7',tc:'#14532d'},
+  'Bebida':{bg:'#ccfbf1',tc:'#064e3b'},'Ingrediente Base':{bg:'#fce7f3',tc:'#701a75'},
+  'Proteína':{bg:'#fef3c7',tc:'#78350f'},'Vegetal':{bg:'#ede9fe',tc:'#3b0764'},
+  'Condimento':{bg:'#ffedd5',tc:'#7c2d12'},'Suministro':{bg:'#f1f5f9',tc:'#1e293b'},
+  'Otro':{bg:'#f1f5f9',tc:'#1e293b'},
+};
 
-let items = load();
-let activeFilter = 'all';
+let items=[];
+let nextId=38;
+let activeF='all';
+let saveTimer=null;
+let isLoaded=false;
 
-function getStatus(qty, min) {
-  if (qty <= 0) return 'out';
-  if (qty < min) return 'low';
-  return 'ok';
+function syncUI(state,msg){
+  const dot=document.getElementById('syncDot');
+  dot.className='dot '+(state==='ok'?'ok':state==='syncing'?'syncing':'error');
+  document.getElementById('syncLbl').textContent=msg;
 }
 
-function statusPill(qty, min) {
-  const s = getStatus(qty, min);
-  if (s === 'ok')  return '<span class="status-pill s-ok">✓ HAY</span>';
-  if (s === 'low') return '<span class="status-pill s-low">⚠ POCO</span>';
-  return '<span class="status-pill s-out">✕ SIN STOCK</span>';
+syncUI('syncing','Conectando...');
+
+// Escuchar cambios en tiempo real
+onValue(dbRef,(snapshot)=>{
+  const data=snapshot.val();
+  if(data && data.items && data.items.length>0){
+    items=data.items;
+    nextId=data.nextId||38;
+  }
+  isLoaded=true;
+  syncUI('ok','Sincronizado ✓');
+  render();
+},(error)=>{
+  syncUI('error','Sin conexión');
+});
+
+function saveToFirebase(){
+  syncUI('syncing','Guardando...');
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    set(dbRef,{items,nextId})
+      .then(()=>{
+        const t=new Date();
+        syncUI('ok','Guardado '+t.toLocaleTimeString('es-DO',{hour:'2-digit',minute:'2-digit'}));
+      })
+      .catch(()=>syncUI('error','Error al guardar'));
+  },600);
 }
 
-function updateStats() {
-  const ok  = items.filter(i => getStatus(i.qty,i.min)==='ok').length;
-  const low = items.filter(i => getStatus(i.qty,i.min)==='low').length;
-  const out = items.filter(i => getStatus(i.qty,i.min)==='out').length;
-  document.getElementById('statsGrid').innerHTML = `
+function st(qty,min){return qty<=0?'out':qty<min?'low':'ok'}
+function pill(qty,min){
+  const s=st(qty,min);
+  if(s==='ok')return'<span class="spill s-ok">✓ HAY</span>';
+  if(s==='low')return'<span class="spill s-low">⚠ POCO</span>';
+  return'<span class="spill s-out">✕ SIN STOCK</span>';
+}
+
+function render(){
+  const ok=items.filter(i=>st(i.qty,i.min)==='ok').length;
+  const low=items.filter(i=>st(i.qty,i.min)==='low').length;
+  const out=items.filter(i=>st(i.qty,i.min)==='out').length;
+  document.getElementById('stats').innerHTML=`
     <div class="stat"><div class="stat-label">Total productos</div><div class="stat-val">${items.length}</div></div>
     <div class="stat"><div class="stat-label">En stock</div><div class="stat-val ok">${ok}</div></div>
     <div class="stat"><div class="stat-label">Poco stock</div><div class="stat-val warn">${low}</div></div>
-    <div class="stat"><div class="stat-label">Sin stock</div><div class="stat-val danger">${out}</div></div>
-  `;
-  const bad = items.filter(i => getStatus(i.qty,i.min) !== 'ok');
-  const banner = document.getElementById('alertBanner');
-  if (bad.length) {
-    banner.classList.add('show');
-    document.getElementById('alertChips').innerHTML = bad.map(i =>
-      `<span class="chip ${getStatus(i.qty,i.min)}">${i.nombre}</span>`
-    ).join('');
-  } else {
-    banner.classList.remove('show');
-  }
-}
-
-function updateCatFilter() {
-  const sel = document.getElementById('catFilter');
-  const cur = sel.value;
-  const cats = [...new Set(items.map(i => i.cat))].sort();
-  sel.innerHTML = '<option value="">Todas las categorías</option>' +
-    cats.map(c => `<option${c===cur?' selected':''}>${c}</option>`).join('');
-}
-
-function render() {
-  updateStats();
-  updateCatFilter();
-  const q   = document.getElementById('search').value.toLowerCase();
-  const cat = document.getElementById('catFilter').value;
-  const list = items.filter(i => {
-    const mQ = i.nombre.toLowerCase().includes(q);
-    const mC = !cat || i.cat === cat;
-    const st = getStatus(i.qty, i.min);
-    const mF = activeFilter==='all' || st===activeFilter || (activeFilter==='ok'&&st==='ok');
-    return mQ && mC && mF;
-  });
-
-  if (!list.length) {
-    document.getElementById('tbody').innerHTML =
-      `<tr><td colspan="6" class="empty">No se encontraron productos</td></tr>`;
-    return;
-  }
-  document.getElementById('tbody').innerHTML = list.map((it, idx) => {
-    const cs = CAT_STYLE[it.cat] || CAT_STYLE['Otro'];
-    return `
-    <tr>
-      <td style="color:var(--text3);font-size:13px;width:36px">${idx+1}</td>
-      <td>
-        <div class="prod-name">${it.nombre}</div>
-        <div class="min-info">mínimo: ${it.min}</div>
-      </td>
-      <td><span class="cat-badge" style="background:${cs.bg};color:${cs.text}">${it.cat}</span></td>
-      <td>
-        <div class="qty-wrap">
-          <button class="qty-btn" onclick="changeQty(${it.id},-1)">−</button>
-          <input class="qty-field" type="number" min="0" step="0.5" value="${it.qty}"
-            onchange="setQty(${it.id}, this.value)" onblur="setQty(${it.id}, this.value)">
-          <button class="qty-btn" onclick="changeQty(${it.id},1)">+</button>
-        </div>
-      </td>
-      <td>${statusPill(it.qty, it.min)}</td>
-      <td><button class="btn-del" onclick="deleteItem(${it.id})" title="Eliminar">✕</button></td>
+    <div class="stat"><div class="stat-label">Sin stock</div><div class="stat-val danger">${out}</div></div>`;
+  const bad=items.filter(i=>st(i.qty,i.min)!=='ok');
+  const ab=document.getElementById('alertBox');
+  if(bad.length){ab.classList.add('show');document.getElementById('alertChips').innerHTML=bad.map(i=>`<span class="chip ${st(i.qty,i.min)}">${i.nombre}</span>`).join('');}
+  else ab.classList.remove('show');
+  const sel=document.getElementById('catF');const cc=sel.value;
+  const cats=[...new Set(items.map(i=>i.cat))].sort();
+  sel.innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option${c===cc?' selected':''}>${c}</option>`).join('');
+  const q=document.getElementById('search').value.toLowerCase();
+  const cat=document.getElementById('catF').value;
+  const list=items.filter(i=>i.nombre.toLowerCase().includes(q)&&(!cat||i.cat===cat)&&(activeF==='all'||st(i.qty,i.min)===activeF));
+  if(!list.length){document.getElementById('tbody').innerHTML='<tr><td colspan="6" class="empty">No se encontraron productos</td></tr>';return;}
+  document.getElementById('tbody').innerHTML=list.map((it,idx)=>{
+    const cs=CAT_STYLE[it.cat]||CAT_STYLE['Otro'];
+    return`<tr>
+      <td style="color:#888;width:32px;font-size:13px">${idx+1}</td>
+      <td><div class="pname">${it.nombre}</div><div class="pmeta">mín: ${it.min}</div></td>
+      <td><span class="cat-badge" style="background:${cs.bg};color:${cs.tc}">${it.cat}</span></td>
+      <td><div class="qwrap">
+        <button class="qbtn" onclick="window.chQ(${it.id},-1)">−</button>
+        <input class="qfield" type="number" min="0" step="0.5" value="${it.qty}" onchange="window.setQ(${it.id},this.value)">
+        <button class="qbtn" onclick="window.chQ(${it.id},1)">+</button>
+      </div></td>
+      <td>${pill(it.qty,it.min)}</td>
+      <td><button class="del-btn" onclick="window.del(${it.id})">✕</button></td>
     </tr>`;
   }).join('');
 }
 
-function changeQty(id, delta) {
-  const it = items.find(i => i.id === id);
-  if (it) { it.qty = Math.max(0, parseFloat((it.qty + delta).toFixed(2))); save(items); render(); }
-}
-function setQty(id, val) {
-  const it = items.find(i => i.id === id);
-  if (it) { it.qty = Math.max(0, parseFloat(val)||0); save(items); render(); }
-}
-function deleteItem(id) {
-  if (!confirm('¿Eliminar este producto?')) return;
-  items = items.filter(i => i.id !== id);
-  save(items);
-  render();
-  showToast('Producto eliminado');
-}
-
-function setFilter(btn) {
-  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  activeFilter = btn.dataset.f;
-  render();
-}
-
-function toggleForm() {
-  const f = document.getElementById('addForm');
-  f.classList.toggle('open');
-  if (f.classList.contains('open')) document.getElementById('nNombre').focus();
-}
-
-function addItem() {
-  const nombre = document.getElementById('nNombre').value.trim();
-  if (!nombre) { alert('Escribe el nombre del producto.'); return; }
-  const cat = document.getElementById('nCat').value;
-  const qty = parseFloat(document.getElementById('nQty').value)||0;
-  const min = parseFloat(document.getElementById('nMin').value)||5;
-  items.push({id: getNextId(), nombre, cat, qty, min});
-  document.getElementById('nNombre').value = '';
-  document.getElementById('nQty').value = '';
-  document.getElementById('nMin').value = '';
+window.chQ=(id,d)=>{const it=items.find(i=>i.id===id);if(it){it.qty=Math.max(0,parseFloat((it.qty+d).toFixed(2)));saveToFirebase();render();}};
+window.setQ=(id,v)=>{const it=items.find(i=>i.id===id);if(it){it.qty=Math.max(0,parseFloat(v)||0);saveToFirebase();render();}};
+window.del=(id)=>{if(!confirm('¿Eliminar este producto?'))return;items=items.filter(i=>i.id!==id);saveToFirebase();render();toast('Eliminado');};
+window.setF=(btn)=>{document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');activeF=btn.dataset.f;render();};
+window.toggleForm=()=>{const f=document.getElementById('addForm');f.classList.toggle('open');if(f.classList.contains('open'))document.getElementById('nN').focus();};
+window.addItem=()=>{
+  const nombre=document.getElementById('nN').value.trim();
+  if(!nombre){alert('Escribe el nombre.');return;}
+  items.push({id:nextId++,nombre,cat:document.getElementById('nC').value,qty:parseFloat(document.getElementById('nQ').value)||0,min:parseFloat(document.getElementById('nM').value)||5});
+  document.getElementById('nN').value='';document.getElementById('nQ').value='';document.getElementById('nM').value='';
   document.getElementById('addForm').classList.remove('open');
-  save(items);
-  render();
-  showToast('Producto agregado ✓');
-}
-
-document.getElementById('nNombre').addEventListener('keydown', e => { if(e.key==='Enter') addItem(); });
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-render();
+  saveToFirebase();render();toast('Producto agregado ✓');
+};
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+document.getElementById('nN').addEventListener('keydown',e=>{if(e.key==='Enter')window.addItem();});
 </script>
 </body>
 </html>
