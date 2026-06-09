@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>York Pizza — Inventario</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#D85A30;--red-d:#993C1D;--red-l:#FAECE7;
+  --green:#1D9E75;--green-l:#E1F5EE;--green-d:#085041;
+  --amber:#BA7517;--amber-l:#FAEEDA;--amber-d:#633806;
+  --danger:#E24B4A;--danger-l:#FCEBEB;--danger-d:#A32D2D;
+  --text:#2C2C2A;--text2:#5F5E5A;--text3:#888780;
+  --bg:#FAFAF8;--surface:#FFFFFF;--border:rgba(44,44,42,0.12);
+  --gray-l:#F1EFE8;--radius:10px;--radius-sm:6px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:10px}
+.logo{font-size:18px;font-weight:600;letter-spacing:-0.3px;white-space:nowrap}
+.logo em{color:var(--red);font-style:normal}
+.sync-info{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3)}
+.dot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;transition:background .3s}
+.dot.ok{background:var(--green)}.dot.syncing{background:var(--amber);animation:pulse 1s infinite}.dot.error{background:var(--danger)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+main{max-width:960px;margin:0 auto;padding:20px 16px 80px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.stat-label{font-size:12px;color:var(--text3);margin-bottom:6px}
+.stat-val{font-size:24px;font-weight:600;line-height:1}
+.stat-val.ok{color:var(--green)}.stat-val.warn{color:var(--amber)}.stat-val.danger{color:var(--danger)}
+.alert{background:var(--danger-l);border:1px solid #F09595;border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;display:none}
+.alert.show{display:block}
+.alert-title{font-size:13px;font-weight:600;color:var(--danger-d);margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:3px 10px;border-radius:999px}
+.chip.out{background:#F7C1C1;color:#501313}.chip.low{background:#FAC775;color:#412402}
+.toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.search-wrap{position:relative;flex:1;min-width:160px}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
+.search-wrap input{width:100%;padding:9px 12px 9px 34px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;background:var(--surface);color:var(--text);outline:none}
+.search-wrap input:focus{border-color:var(--red)}
+select{padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;background:var(--surface);color:var(--text);outline:none;cursor:pointer}
+.fbtns{display:flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface)}
+.fbtn{padding:8px 12px;font-family:inherit;font-size:13px;border:none;background:transparent;cursor:pointer;color:var(--text2);white-space:nowrap}
+.fbtn.active{background:var(--text);color:#fff}
+.fbtn:not(:last-child){border-right:1px solid var(--border)}
+.btn-primary{padding:9px 16px;background:var(--red);color:#fff;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-primary:active{background:var(--red-d)}
+.btn-ghost{padding:8px 14px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;cursor:pointer}
+.add-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;display:none}
+.add-form.open{display:block}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;font-weight:500;color:var(--text2)}
+.field input,.field select{padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;background:var(--bg);color:var(--text);outline:none}
+.field input:focus,.field select:focus{border-color:var(--red);background:var(--surface)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;background:var(--gray-l);border-bottom:1px solid var(--border)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--gray-l)}
+tbody td{padding:9px 14px;vertical-align:middle}
+.cat-badge{font-size:11px;font-weight:500;padding:3px 9px;border-radius:999px;display:inline-block;white-space:nowrap}
+.spill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.s-ok{background:var(--green-l);color:var(--green-d)}.s-low{background:var(--amber-l);color:var(--amber-d)}.s-out{background:var(--danger-l);color:var(--danger-d)}
+.qwrap{display:flex;align-items:center;gap:6px}
+.qbtn{width:28px;height:28px;border:1px solid var(--border);background:var(--bg);border-radius:4px;cursor:pointer;font-size:18px;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.qbtn:active{background:#ddd}
+.qfield{width:62px;padding:5px 6px;border:1px solid var(--border);border-radius:4px;font-family:inherit;font-size:14px;font-weight:500;text-align:center;background:var(--surface);color:var(--text);outline:none}
+.qfield:focus{border-color:var(--red)}
+.conv-wrap{display:flex;align-items:center;gap:4px}
+.conv-field{width:72px;padding:5px 6px;border:1px solid var(--border);border-radius:4px;font-family:inherit;font-size:13px;font-weight:500;text-align:center;background:var(--surface);color:var(--text);outline:none}
+.conv-field:focus{border-color:var(--red)}
+.conv-label{font-size:11px;color:var(--text3);font-weight:500}
+.conv-sep{font-size:13px;color:var(--text3);padding:0 2px}
+.del-btn{background:transparent;border:none;cursor:pointer;color:var(--text3);padding:6px;border-radius:4px;font-size:18px;line-height:1;-webkit-tap-highlight-color:transparent}
+.del-btn:active{color:var(--danger)}
+.pname{font-weight:500;font-size:14px}.pmeta{font-size:11px;color:var(--text3);margin-top:1px}
+.empty{text-align:center;padding:40px;color:var(--text3);font-size:14px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--text);color:#fff;padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;opacity:0;transition:all .25s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:600px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  thead th:nth-child(3),tbody td:nth-child(3){display:none}
+  .fbtns{display:none}
+  main{padding:14px 12px 80px}
+  .conv-field{width:58px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><em>YORK</em> PIZZA — Inventario</div>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div class="sync-info"><span class="dot" id="syncDot"></span><span id="syncLbl">Conectando...</span></div>
+    <button class="btn-primary" onclick="toggleForm()">+ Agregar</button>
+  </div>
+</header>
+<main>
+  <div class="stats" id="stats"></div>
+  <div class="alert" id="alertBox">
+    <div class="alert-title">⚠ Necesitas reponer:</div>
+    <div class="chips" id="alertChips"></div>
+  </div>
+  <div class="add-form" id="addForm">
+    <div class="form-row">
+      <div class="field" style="flex:2;min-width:150px"><label>Nombre del producto</label><input type="text" id="nN" placeholder="Ej: Queso Mozzarella"></div>
+      <div class="field" style="flex:1.5;min-width:130px"><label>Categoría</label>
+        <select id="nC"><option>Empaque</option><option>Desechable</option><option>Refresco</option><option>Jugo</option><option>Agua</option>
+        <option>Ingrediente Base</option><option>Proteína</option><option>Vegetal</option>
+        <option>Condimento</option><option>Suministro</option><option>Otro</option></select>
+      </div>
+      <div class="field" style="width:95px"><label>Cantidad</label><input type="number" id="nQ" min="0" step="0.5" placeholder="0"></div>
+      <div class="field" style="width:95px"><label>Mínimo</label><input type="number" id="nM" min="0" step="0.5" placeholder="3"></div>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <button class="btn-primary" onclick="addItem()">Guardar</button>
+        <button class="btn-ghost" onclick="toggleForm()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search" placeholder="Buscar producto..." oninput="render()">
+    </div>
+    <select id="catF" onchange="render()"><option value="">Todas las categorías</option></select>
+    <div class="fbtns">
+      <button class="fbtn active" data-f="all" onclick="setF(this)">Todos</button>
+      <button class="fbtn" data-f="ok" onclick="setF(this)">En stock</button>
+      <button class="fbtn" data-f="low" onclick="setF(this)">Poco</button>
+      <button class="fbtn" data-f="out" onclick="setF(this)">Sin stock</button>
+    </div>
+  </div>
+  <div class="card">
+    <table>
+      <thead><tr><th>#</th><th>Producto</th><th>Categoría</th><th>Cantidad</th><th>Estado</th><th></th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAbvHuaJsyd03ztIQoMhilXpLDpaAJtH9s",
+  authDomain: "york-pizza-82d22.firebaseapp.com",
+  databaseURL: "https://york-pizza-82d22-default-rtdb.firebaseio.com",
+  projectId: "york-pizza-82d22",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const dbRef = ref(db, 'inventario');
+
+const CATS_PESO = ['Proteína','Ingrediente Base','Vegetal','Condimento'];
+
+const CAT_STYLE={
+  'Empaque':{bg:'#dbeafe',tc:'#1e3a5f'},
+  'Desechable':{bg:'#dcfce7',tc:'#14532d'},
+  'Refresco':{bg:'#fde8d8',tc:'#7c2d12'},
+  'Jugo':{bg:'#fef9c3',tc:'#713f12'},
+  'Agua':{bg:'#e0f2fe',tc:'#075985'},
+  'Ingrediente Base':{bg:'#fce7f3',tc:'#701a75'},
+  'Proteína':{bg:'#fef3c7',tc:'#78350f'},
+  'Vegetal':{bg:'#ede9fe',tc:'#3b0764'},
+  'Condimento':{bg:'#ffedd5',tc:'#7c2d12'},
+  'Suministro':{bg:'#f1f5f9',tc:'#1e293b'},
+  'Otro':{bg:'#f1f5f9',tc:'#1e293b'},
+};
+
+const DEFAULTS = [
+  // Empaque
+  {id:1,nombre:'Cajas Grandes',cat:'Empaque',qty:113,min:20},
+  {id:2,nombre:'Cajas Pequeñas',cat:'Empaque',qty:24,min:10},
+  {id:3,nombre:'Funda Blanca de Asa',cat:'Empaque',qty:4,min:10},
+  {id:4,nombre:'Fundas de Rayas',cat:'Empaque',qty:2,min:5},
+  {id:5,nombre:'Fundas Basura',cat:'Empaque',qty:1,min:5},
+  {id:6,nombre:'Porta Pizza',cat:'Empaque',qty:80,min:20},
+  // Desechable
+  {id:7,nombre:'Platos #9',cat:'Desechable',qty:61,min:15},
+  {id:8,nombre:'Tenedores',cat:'Desechable',qty:15,min:10},
+  {id:9,nombre:'Servilletas',cat:'Desechable',qty:3,min:5},
+  {id:10,nombre:'Caja de Guantes',cat:'Desechable',qty:1,min:2},
+  {id:11,nombre:'Vasos',cat:'Desechable',qty:0,min:10},
+  // Refrescos
+  {id:12,nombre:'Coca Cola 13oz',cat:'Refresco',qty:10,min:6},
+  {id:13,nombre:'Sprite',cat:'Refresco',qty:0,min:3},
+  {id:14,nombre:'Country Club Rojo',cat:'Refresco',qty:0,min:3},
+  {id:15,nombre:'Country Club Uva',cat:'Refresco',qty:0,min:3},
+  {id:16,nombre:'Country Club Merengue',cat:'Refresco',qty:0,min:3},
+  {id:17,nombre:'Country Club Naranja',cat:'Refresco',qty:0,min:3},
+  // Jugos
+  {id:18,nombre:'Remolacha Avena',cat:'Jugo',qty:0,min:3},
+  {id:19,nombre:'Mango',cat:'Jugo',qty:0,min:3},
+  {id:20,nombre:'Tamarindo',cat:'Jugo',qty:0,min:3},
+  {id:21,nombre:'Chinola',cat:'Jugo',qty:0,min:3},
+  {id:22,nombre:'Limón',cat:'Jugo',qty:0,min:3},
+  {id:23,nombre:'Limón Avena',cat:'Jugo',qty:0,min:3},
+  {id:24,nombre:'Pera Piña',cat:'Jugo',qty:0,min:3},
+  {id:25,nombre:'Piña',cat:'Jugo',qty:0,min:3},
+  {id:26,nombre:'Naranja',cat:'Jugo',qty:0,min:3},
+  {id:27,nombre:'Cereza',cat:'Jugo',qty:0,min:3},
+  // Agua
+  {id:28,nombre:'Agua Villar',cat:'Agua',qty:0,min:3},
+  {id:29,nombre:'Agua Cool Heaven',cat:'Agua',qty:0,min:3},
+  // Ingrediente Base
+  {id:30,nombre:'Masa Grande',cat:'Ingrediente Base',qty:9,min:5},
+  {id:31,nombre:'Masa Personal',cat:'Ingrediente Base',qty:0,min:5},
+  {id:32,nombre:'Queso Mozzarella (lb)',cat:'Ingrediente Base',qty:7,min:5},
+  {id:33,nombre:'Salsa de Pizza',cat:'Ingrediente Base',qty:2,min:3},
+  {id:34,nombre:'Salsa BBQ',cat:'Ingrediente Base',qty:0,min:3},
+  // Proteína
+  {id:35,nombre:'Peperoni (lb)',cat:'Proteína',qty:2,min:3},
+  {id:36,nombre:'Jamón (lb)',cat:'Proteína',qty:1,min:3},
+  {id:37,nombre:'Tocino (lb)',cat:'Proteína',qty:1,min:3},
+  {id:38,nombre:'Salchicha Italiana (lb)',cat:'Proteína',qty:1,min:3},
+  {id:39,nombre:'Pollo (lb)',cat:'Proteína',qty:0,min:3},
+  {id:40,nombre:'Chorizo Español',cat:'Proteína',qty:2.5,min:2},
+  // Vegetal
+  {id:41,nombre:'Maíz (lata)',cat:'Vegetal',qty:2,min:2},
+  {id:42,nombre:'Pimentón Verde',cat:'Vegetal',qty:0,min:2},
+  {id:43,nombre:'Pimentón Rojo',cat:'Vegetal',qty:0,min:2},
+  {id:44,nombre:'Cebolla (lb)',cat:'Vegetal',qty:5,min:3},
+  {id:45,nombre:'Aceitunas Negras (lata)',cat:'Vegetal',qty:0,min:2},
+  {id:46,nombre:'Vegetales Mix (lb)',cat:'Vegetal',qty:4,min:3},
+  // Condimento
+  {id:47,nombre:'Ajo (lb)',cat:'Condimento',qty:1,min:2},
+  {id:48,nombre:'Orégano (paquete)',cat:'Condimento',qty:1,min:2},
+  {id:49,nombre:'Azúcar (lb)',cat:'Condimento',qty:0.5,min:1},
+  // Otro
+  {id:50,nombre:'Lasaña Pollo',cat:'Otro',qty:0,min:2},
+  {id:51,nombre:'Lasaña Res',cat:'Otro',qty:0,min:2},
+  {id:52,nombre:'Lasaña Mixta',cat:'Otro',qty:0,min:2},
+  // Suministro
+  {id:53,nombre:'Gas (tanque)',cat:'Suministro',qty:0,min:1},
+];
+
+let items=[];
+let nextId=54;
+let activeF='all';
+let saveTimer=null;
+let isLoaded=false;
+
+function syncUI(state,msg){
+  const dot=document.getElementById('syncDot');
+  dot.className='dot '+(state==='ok'?'ok':state==='syncing'?'syncing':'error');
+  document.getElementById('syncLbl').textContent=msg;
+}
+
+syncUI('syncing','Conectando...');
+onValue(dbRef,(snapshot)=>{
+  const data=snapshot.val();
+  if(data&&data.items&&data.items.length>0){
+    items=data.items;
+    nextId=data.nextId||54;
+  } else if(!isLoaded){
+    items=JSON.parse(JSON.stringify(DEFAULTS));
+    saveToFirebase();
+  }
+  isLoaded=true;
+  syncUI('ok','Sincronizado ✓');
+  render();
+},(error)=>{syncUI('error','Sin conexión');});
+
+function saveToFirebase(){
+  syncUI('syncing','Guardando...');
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    set(dbRef,{items,nextId})
+      .then(()=>{const t=new Date();syncUI('ok','Guardado '+t.toLocaleTimeString('es-DO',{hour:'2-digit',minute:'2-digit'}));})
+      .catch(()=>syncUI('error','Error al guardar'));
+  },600);
+}
+
+function st(qty,min){return qty<=0?'out':qty<min?'low':'ok'}
+function pill(qty,min){
+  const s=st(qty,min);
+  if(s==='ok')return'<span class="spill s-ok">✓ HAY</span>';
+  if(s==='low')return'<span class="spill s-low">⚠ POCO</span>';
+  return'<span class="spill s-out">✕ SIN STOCK</span>';
+}
+
+function lbToG(lb){return (lb*453.6).toFixed(0);}
+
+function render(){
+  const ok=items.filter(i=>st(i.qty,i.min)==='ok').length;
+  const low=items.filter(i=>st(i.qty,i.min)==='low').length;
+  const out=items.filter(i=>st(i.qty,i.min)==='out').length;
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="stat-label">Total productos</div><div class="stat-val">${items.length}</div></div>
+    <div class="stat"><div class="stat-label">En stock</div><div class="stat-val ok">${ok}</div></div>
+    <div class="stat"><div class="stat-label">Poco stock</div><div class="stat-val warn">${low}</div></div>
+    <div class="stat"><div class="stat-label">Sin stock</div><div class="stat-val danger">${out}</div></div>`;
+  const bad=items.filter(i=>st(i.qty,i.min)!=='ok');
+  const ab=document.getElementById('alertBox');
+  if(bad.length){ab.classList.add('show');document.getElementById('alertChips').innerHTML=bad.map(i=>`<span class="chip ${st(i.qty,i.min)}">${i.nombre}</span>`).join('');}
+  else ab.classList.remove('show');
+  const sel=document.getElementById('catF');const cc=sel.value;
+  const cats=[...new Set(items.map(i=>i.cat))].sort();
+  sel.innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option${c===cc?' selected':''}>${c}</option>`).join('');
+  const q=document.getElementById('search').value.toLowerCase();
+  const cat=document.getElementById('catF').value;
+  const list=items.filter(i=>i.nombre.toLowerCase().includes(q)&&(!cat||i.cat===cat)&&(activeF==='all'||st(i.qty,i.min)===activeF));
+  if(!list.length){document.getElementById('tbody').innerHTML='<tr><td colspan="6" class="empty">No se encontraron productos</td></tr>';return;}
+  document.getElementById('tbody').innerHTML=list.map((it,idx)=>{
+    const cs=CAT_STYLE[it.cat]||CAT_STYLE['Otro'];
+    const usaPeso=CATS_PESO.includes(it.cat);
+    const cantidadCell=usaPeso?`
+      <div class="conv-wrap">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <span class="conv-label">GRAMOS</span>
+          <input class="conv-field" type="number" min="0" step="1" value="${lbToG(it.qty)}" onchange="window.setG(${it.id},this.value)" placeholder="0g">
+        </div>
+        <span class="conv-sep">⇄</span>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <span class="conv-label">LIBRAS</span>
+          <input class="conv-field" type="number" min="0" step="0.001" value="${it.qty}" onchange="window.setQ(${it.id},this.value)" placeholder="0lb">
+        </div>
+      </div>`:`
+      <div class="qwrap">
+        <button class="qbtn" onclick="window.chQ(${it.id},-1)">−</button>
+        <input class="qfield" type="number" min="0" step="0.5" value="${it.qty}" onchange="window.setQ(${it.id},this.value)">
+        <button class="qbtn" onclick="window.chQ(${it.id},1)">+</button>
+      </div>`;
+    return`<tr>
+      <td style="color:#888;width:32px;font-size:13px">${idx+1}</td>
+      <td><div class="pname">${it.nombre}</div><div class="pmeta">mín: ${it.min}</div></td>
+      <td><span class="cat-badge" style="background:${cs.bg};color:${cs.tc}">${it.cat}</span></td>
+      <td>${cantidadCell}</td>
+      <td>${pill(it.qty,it.min)}</td>
+      <td><button class="del-btn" onclick="window.del(${it.id})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+window.chQ=(id,d)=>{const it=items.find(i=>i.id===id);if(it){it.qty=Math.max(0,parseFloat((it.qty+d).toFixed(2)));saveToFirebase();render();}};
+window.setQ=(id,v)=>{const it=items.find(i=>i.id===id);if(it){it.qty=Math.max(0,parseFloat(v)||0);saveToFirebase();render();}};
+window.setG=(id,g)=>{const it=items.find(i=>i.id===id);if(it){it.qty=Math.max(0,(parseFloat(g)||0)/453.6);saveToFirebase();render();}};
+window.del=(id)=>{if(!confirm('¿Eliminar este producto?'))return;items=items.filter(i=>i.id!==id);saveToFirebase();render();toast('Eliminado');};
+window.setF=(btn)=>{document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');activeF=btn.dataset.f;render();};
+window.toggleForm=()=>{const f=document.getElementById('addForm');f.classList.toggle('open');if(f.classList.contains('open'))document.getElementById('nN').focus();};
+window.addItem=()=>{
+  const nombre=document.getElementById('nN').value.trim();
+  if(!nombre){alert('Escribe el nombre.');return;}
+  items.push({id:nextId++,nombre,cat:document.getElementById('nC').value,qty:parseFloat(document.getElementById('nQ').value)||0,min:parseFloat(document.getElementById('nM').value)||3});
+  document.getElementById('nN').value='';document.getElementById('nQ').value='';document.getElementById('nM').value='';
+  document.getElementById('addForm').classList.remove('open');
+  saveToFirebase();render();toast('Producto agregado ✓');
+};
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+document.getElementById('nN').addEventListener('keydown',e=>{if(e.key==='Enter')window.addItem();});
+</script>
+</body>
+</html>
