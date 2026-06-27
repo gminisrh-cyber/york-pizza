@@ -169,6 +169,7 @@ tbody td{padding:9px 14px;vertical-align:middle}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAbvHuaJsyd03ztIQoMhilXpLDpaAJtH9s",
@@ -179,6 +180,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
 const dbRef = ref(db, 'inventario');
 
 const IDS_PESO = [32,35,36,37,38,39,40,41,43,44,45,47,48,49];
@@ -265,6 +267,7 @@ function syncUI(state,msg){
 }
 
 syncUI('syncing','Conectando...');
+signInAnonymously(auth).then(()=>{
 onValue(dbRef,(snapshot)=>{
   const data=snapshot.val();
   if(data&&data.items&&data.items.length>0){
@@ -277,6 +280,7 @@ onValue(dbRef,(snapshot)=>{
   syncUI('ok','Sincronizado ✓');
   render();
 },(error)=>{syncUI('error','Sin conexión');});
+}).catch(()=>syncUI('error','Error de autenticación'));
 
 function saveToFirebase(){
   syncUI('syncing','Guardando...');
@@ -402,3 +406,4 @@ document.getElementById('nN').addEventListener('keydown',e=>{if(e.key==='Enter')
 </script>
 </body>
 </html>
+
