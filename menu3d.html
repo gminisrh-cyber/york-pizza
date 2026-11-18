@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>York Pizza · Menú 3D</title>
+<meta name="theme-color" content="#0b0b0b">
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+<style>
+  :root{
+    --negro:#0b0b0b; --rojo:#e3201b; --amarillo:#ffc928; --crema:#f6efe0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--negro);color:var(--crema);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100%}
+  body{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+  header{text-align:center;padding:18px 16px 6px}
+  header h1{font-family:Impact,"Arial Black",sans-serif;font-size:2.1rem;letter-spacing:1px;color:var(--rojo);
+    text-shadow:2px 2px 0 var(--crema);text-transform:uppercase;line-height:1}
+  header p{color:var(--amarillo);font-weight:700;font-size:.95rem;margin-top:6px}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:12px 16px 4px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;border:2px solid var(--amarillo);background:transparent;color:var(--amarillo);
+    font-weight:800;padding:8px 14px;border-radius:999px;font-size:.9rem;cursor:pointer}
+  .chip[aria-pressed="true"]{background:var(--amarillo);color:var(--negro)}
+  .stage{position:relative;margin:8px 12px 0;border-radius:20px;overflow:hidden;
+    background:radial-gradient(circle at 50% 40%,#2a2a2a 0%,#0b0b0b 75%);border:1px solid #2b2b2b}
+  model-viewer{width:100%;height:min(62vh,440px);--poster-color:transparent;background:transparent}
+  .ar-btn{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--amarillo);color:var(--negro);
+    border:0;border-radius:999px;padding:12px 20px;font-weight:900;font-size:1rem;box-shadow:0 6px 18px rgba(0,0,0,.5);cursor:pointer}
+  .hint{text-align:center;color:#a9a39a;font-size:.8rem;margin-top:8px}
+  .info{padding:14px 18px 0;text-align:center}
+  .info h2{font-family:Impact,"Arial Black",sans-serif;font-size:1.9rem;color:var(--amarillo);text-transform:uppercase;letter-spacing:.5px}
+  .badge{display:inline-block;background:var(--rojo);color:#fff;font-weight:900;font-size:.72rem;padding:3px 9px;border-radius:6px;margin-left:6px;vertical-align:middle;letter-spacing:.5px}
+  .desc{color:#d9d2c3;margin-top:4px;font-size:.95rem}
+  .sizes{display:flex;gap:10px;margin:14px 0 0;justify-content:center}
+  .size{flex:1;max-width:170px;border:2px solid #3a3a3a;background:#161616;color:var(--crema);border-radius:14px;padding:10px 8px;cursor:pointer;text-align:center}
+  .size small{display:block;color:#a9a39a;font-weight:700;font-size:.75rem;text-transform:uppercase}
+  .size b{display:block;font-size:1.35rem;color:var(--amarillo);margin-top:2px}
+  .size[aria-pressed="true"]{border-color:var(--rojo);background:#240d0c}
+  .order{display:block;margin:16px 18px 0;background:var(--rojo);color:#fff;text-decoration:none;text-align:center;
+    font-weight:900;font-size:1.05rem;padding:15px;border-radius:14px}
+  footer{margin:18px 16px 0;text-align:center;color:#8d877c;font-size:.78rem}
+  footer b{color:var(--amarillo)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>York Pizza</h1>
+  <p>La pizza que sí resuelve</p>
+</header>
+
+<div class="chips" id="chips" aria-label="Pizzas"></div>
+
+<div class="stage">
+  <model-viewer id="mv"
+    alt="Pizza en 3D"
+    camera-controls
+    auto-rotate
+    auto-rotate-delay="1500"
+    rotation-per-second="18deg"
+    camera-orbit="0deg 55deg auto"
+    min-camera-orbit="auto 10deg auto"
+    max-camera-orbit="auto 90deg auto"
+    shadow-intensity="1"
+    shadow-softness="0.8"
+    exposure="1.1"
+    environment-image="neutral"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    ar-placement="floor"
+    ar-scale="fixed"
+    interaction-prompt="auto">
+    <button slot="ar-button" class="ar-btn">📱 Ver en tu mesa</button>
+  </model-viewer>
+</div>
+<p class="hint">Gírala con el dedo · Toca “Ver en tu mesa” para verla a tamaño real</p>
+
+<section class="info">
+  <h2><span id="nombre"></span><span class="badge" id="badge" hidden>LA MÁS VENDIDA</span></h2>
+  <p class="desc" id="desc"></p>
+  <div class="sizes" id="sizes"></div>
+</section>
+
+<a class="order" id="order" href="#" target="_blank" rel="noopener">Pedir por WhatsApp</a>
+
+<footer>
+  <p>📍 C. Jacinto de los Santos 276 · Santo Domingo Este</p>
+  <p>📞 <b>849-255-3892</b> · @yorkpizzard</p>
+</footer>
+
+<script>
+  // ===== Agrega aquí cada pizza nueva =====
+  // modelo: archivo .glb dentro de la carpeta modelos/
+  const WHATSAPP = "18492553892";
+  const PIZZAS = [
+    {
+      id: "popi",
+      nombre: "La Popi",
+      masVendida: true,
+      desc: "Pepperoni, jamón y salchicha italiana con mozzarella.",
+      modelo: "modelos/la-popi.glb",
+      tamanos: [
+        { etiqueta: "Grande",  precio: 750, escala: 1 },
+        { etiqueta: "Pequeña", precio: 375, escala: 0.7 }
+      ]
+    }
+  ];
+  // ========================================
+
+  const mv = document.getElementById("mv");
+  const chips = document.getElementById("chips");
+  const sizesBox = document.getElementById("sizes");
+  const order = document.getElementById("order");
+  let pizza = PIZZAS[0], tamano = pizza.tamanos[0];
+
+  const fmt = n => "RD$" + n.toLocaleString("en-US");
+
+  function pintarTamanos(){
+    sizesBox.innerHTML = "";
+    pizza.tamanos.forEach(t => {
+      const b = document.createElement("button");
+      b.className = "size";
+      b.setAttribute("aria-pressed", String(t === tamano));
+      b.innerHTML = "<small>" + t.etiqueta + "</small><b>" + fmt(t.precio) + "</b>";
+      b.onclick = () => { tamano = t; aplicar(false); };
+      sizesBox.appendChild(b);
+    });
+  }
+
+  function aplicar(cambioModelo){
+    document.getElementById("nombre").textContent = pizza.nombre;
+    document.getElementById("badge").hidden = !pizza.masVendida;
+    document.getElementById("desc").textContent = pizza.desc;
+    if (cambioModelo) mv.src = pizza.modelo;
+    mv.scale = tamano.escala + " " + tamano.escala + " " + tamano.escala;
+    pintarTamanos();
+    const msg = "Hola York Pizza, quiero pedir: 1 " + pizza.nombre + " " + tamano.etiqueta + " (" + fmt(tamano.precio) + ")";
+    order.href = "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(msg);
+    chips.querySelectorAll(".chip").forEach((c, i) => c.setAttribute("aria-pressed", String(PIZZAS[i] === pizza)));
+  }
+
+  PIZZAS.forEach(p => {
+    const c = document.createElement("button");
+    c.className = "chip";
+    c.textContent = (p.masVendida ? "⭐ " : "") + p.nombre;
+    c.onclick = () => { pizza = p; tamano = p.tamanos[0]; aplicar(true); };
+    chips.appendChild(c);
+  });
+  aplicar(true);
+</script>
+</body>
+</html>
